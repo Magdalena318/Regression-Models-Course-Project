@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1619689449113.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "DEB1AF65",
+    "lastKnownWriteTime" : 1619683710,
+    "last_content_update" : 1619683710,
+    "path" : "E:/Projects/R/RegressionModelsProject/RegressionModelsProject.rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "190,44",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

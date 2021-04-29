@@ -1,0 +1,18 @@
+# Regression-Models-Course-Project
+
+About this project
+
+This analysis is performed for the Regression Models course by John Hopkins University on Coursera. The data used for analysis is the built-in 'mtcars' R dataset. The data contains 32 observations on 11 features.
+
+
+* **mpg**:	 Miles per gallon
+* **cyl**:	 Number of cylinders
+* **disp**:	 Displacement (cu.in.)
+* **hp**:	 Gross horsepower
+* **drat**:	 Rear axle ratio
+* **wt**:	 Weight (lb/1000)
+* **qsec**:	 1/4 mile time
+* **vs**:	 V/S
+* **am**:	 Transmission (0 = automatic, 1 = manual)
+* **gear**:	 Number of forward gears
+* **carb**:	 Number of carburetors

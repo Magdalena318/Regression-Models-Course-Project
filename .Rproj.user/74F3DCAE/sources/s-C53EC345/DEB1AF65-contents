@@ -1,0 +1,191 @@
+---
+title: "Regression Models Course Project"
+author: "Daria Karpova"
+date: "4/26/2021"
+output: pdf_document
+---
+
+### About this project
+
+This analysis is performed for the Regression Models course by John Hopkins University on Coursera. The data used for analysis is the built-in 'mtcars' R dataset. The data contains 32 observations on 11 features.
+
+
+* **mpg**:	 Miles per gallon
+* **cyl**:	 Number of cylinders
+* **disp**:	 Displacement (cu.in.)
+* **hp**:	 Gross horsepower
+* **drat**:	 Rear axle ratio
+* **wt**:	 Weight (lb/1000)
+* **qsec**:	 1/4 mile time
+* **vs**:	 V/S
+* **am**:	 Transmission (0 = automatic, 1 = manual)
+* **gear**:	 Number of forward gears
+* **carb**:	 Number of carburetors
+
+### Instructions
+You work for Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
+
+1. “Is an automatic or manual transmission better for MPG”
+2. "Quantify the MPG difference between automatic and manual transmissions"  
+
+### Loading data
+```{r}
+library(nlcor)
+library(knitr)
+library(datasets)
+data(mtcars)
+```
+
+### Exploring data
+```{r}
+# Variable summary
+kable(summary(mtcars[1:10]))
+
+#Taking a look at the data
+kable(head(mtcars))
+```
+
+### Visualization
+Before applying any model let's see how the data looks on a graph.
+
+```{r}
+# For easier representation
+levels(mtcars$am) <- c("Automatic", "Manual")
+
+plot(mpg ~ as.factor(am), data = mtcars, col = (c("red","blue")), ylab = "MPG", xlab = "Transmission Type")
+```
+
+It can be seen that Manual Transmission has noticeably better MPG. Seems like there is a dependency between them.
+
+### Testing for transmission type equality
+
+Let's check if the Automatic and Manual transmission differ by using a t-test. Our hypothesis is that Automatic transmission MPG mean is equal to the Manual Transmission MPG mean.
+
+```{r}
+t.test(mpg ~ am, mtcars, alternative='greater')
+```
+The hypothesis can be rejected with 99.3% confidence, therefore, it is clear that Manual transmission is better for MPG.
+
+### Simple model visualization
+
+```{r}
+plot(mpg ~ am, data = mtcars, col = (c("red","blue")), ylab = "MPG", xlab = "Transmission Type")
+```
+
+From the above graph it is obvious that a linear function of the transmission type alone won't be a good choice. MPG can not be predicted by a single binary value. 
+
+### Univariate regression
+
+To confirm that let's see what would we get from a univariate model depending only on the transmission type.
+
+```{r}
+linear_univariate <- lm(mpg ~ am, data = mtcars)
+summary(linear_univariate)
+```
+
+R-squared is only 0.3385, the model underfits the data. Hence, we have to look for other related variables.
+
+### Finding correlations
+
+```{r}
+mtcars$am <- as.numeric(mtcars$am)
+cor_matrix <- cor(mtcars)
+
+#Printing all correlation coeffitions between MPG and other mtcars variables
+kable(cor_matrix[2:11,1], col.names='MPG')
+```
+
+The correlation table suggests us to use 'cyl', 'disp' and 'wt' variables as they have strong correlation. At the same time Transmission type does not highly correlate with MPG.
+
+### Multivariate regression
+Let's try to fit the data with a simple first-order regression.
+
+```{r}
+linear_multivariate <- lm(mpg ~ cyl + disp + wt + am, data = mtcars)
+summary(linear_multivariate)
+```
+
+Adjusted R-squared is 80.79%. What if we also use 'hp' and 'vs'?
+
+```{r}
+linear_multivariate <- lm(mpg ~ cyl + disp + wt + am + hp + vs, data = mtcars)
+summary(linear_multivariate)
+```
+
+Now it's 82.43%, so generally those variables do not influence the result much when using a simple multivariate model.
+
+### Finding non-linear dependencies
+
+Let's now check the scatterplot for any non-linear dependencies.
+
+```{r}
+par(mfrow=c(2,4))
+plot(mpg ~ cyl, data = mtcars, ylab = "MPG", xlab = "CYL")
+plot(mpg ~ disp, data = mtcars, ylab = "MPG", xlab = "Disp")
+plot(mpg ~ hp, data = mtcars, ylab = "MPG", xlab = "Hp")
+plot(mpg ~ drat, data = mtcars, ylab = "MPG", xlab = "drat")
+plot(mpg ~ wt, data = mtcars, ylab = "MPG", xlab = "Wt")
+plot(mpg ~ qsec, data = mtcars, ylab = "MPG", xlab = "qsec")
+plot(mpg ~ gear, data = mtcars, ylab = "MPG", xlab = "gear")
+plot(mpg ~ carb, data = mtcars, ylab = "MPG", xlab = "carb")
+```
+
+Seems like 'hp' might have a quadratic dependency. As well as 'disp'.
+
+```{r}
+
+mtcars$hp_squared = (mtcars$hp)^2
+mtcars$disp_squared = (mtcars$disp)^2
+```
+
+Now let's fit it into the model.
+
+```{r}
+linear_multivariate <- lm(mpg ~ cyl + disp + disp_squared + wt + am + hp + hp_squared, data = mtcars)
+summary(linear_multivariate)
+```
+
+The final result is 86.1% for Adjusted R-squared. 
+
+### Transmission type influence
+
+'am's p-value is the highest here that indicates it doesn't influence the result much. Let's check for correlation with other variables in the model. Maybe the information 'am' was providing is now obtained from a different variable.
+
+```{r}
+cor_matrix <- cor(mtcars)
+
+#Printing all correlation coeffitions between MPG and other mtcars variables
+kable(cor_matrix[1:11, 9], col.names='AM')
+```
+
+'wt', 'cyl' and 'disp' column have the highest correlation with am, we'll try to remove them one by one.
+
+```{r}
+linear_multivariate <- lm(mpg ~ cyl + disp + disp_squared + am + hp + hp_squared, data = mtcars)
+summary(linear_multivariate)
+
+# Change in MPG when changing to manual
+(summary(linear_multivariate)$coefficient['am', 'Estimate'])# * sd_mpg + mean_mpg
+```
+
+```{r}
+linear_multivariate <- lm(mpg ~ disp + disp_squared + am + hp + hp_squared, data = mtcars)
+summary(linear_multivariate)
+
+# Change in MPG when changing to manual
+(summary(linear_multivariate)$coefficient['am', 'Estimate'])# * sd_mpg + mean_mpg
+```
+
+```{r}
+linear_multivariate <- lm(mpg ~ disp_squared + am + hp + hp_squared, data = mtcars)
+summary(linear_multivariate)
+
+# Change in MPG when changing to manual
+(summary(linear_multivariate)$coefficient['am', 'Estimate'])# * sd_mpg + mean_mpg
+```
+
+Surely, R-squared decreased to 79.77% since we removed 'wt', 'cyl' and 'disp' but during each step we improved our confidence in transmission type having effect on the result. Finally, our confidence reached almost 99% so we'll use that model to quantify the difference. Since the indepent variable of interest is binary estimate corresponds to the change in MPG (when replacing 0 (automatic) by 1 (manual)). We can conclude respectively that manual transmission improved MPG by 3.498.
+
+### Conclusion
+1) Manual transmission is better for MPG than automatic one.
+2) Changing to manual improves MPG by 3.398.
